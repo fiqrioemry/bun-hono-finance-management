@@ -1,0 +1,31 @@
+{
+  "name": "restful-api-hono-finance-management-app",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "build": "bun build src/index.ts --outdir ./dist",
+    "db:generate": "bunx prisma generate",
+    "db:migrate": "bunx prisma migrate dev",
+    "db:deploy": "bunx prisma migrate deploy",
+    "db:studio": "bunx prisma studio",
+    "seed": "bunx prisma db seed"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.2",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/node": "^24.5.2",
+    "@types/nodemailer": "^7.0.1",
+    "@types/pino": "^7.0.4",
+    "bcryptjs": "^3.0.2",
+    "cloudinary": "^2.7.0",
+    "cookie": "^1.0.2",
+    "hono": "^4.9.8",
+    "ioredis": "^5.8.0",
+    "nodemailer": "^7.0.6",
+    "pino": "^9.11.0",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
