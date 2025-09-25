@@ -1,0 +1,104 @@
+  // This is your Prisma schema file,
+  // learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+  // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+  // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+  generator client {
+    provider = "prisma-client-js"
+  }
+
+  datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+  }
+
+
+
+  model User {
+    id        String    @id @default(uuid())
+    email     String    @unique
+    image     String    
+    hashedPassword  String
+    name      String
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    categories  Category[]
+    accounts    Account[]
+
+    @@map("users")
+  }
+
+  enum TransactionType {
+    INCOME
+    EXPENSE
+  }
+
+  model Category {
+    id        String   @id @default(uuid())
+    userId    String?  
+    name      String
+    type      TransactionType
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+
+    transactions Transaction[]
+
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+
+    @@index([userId])
+    @@unique([userId, name])   
+    @@map("categories")
+  }
+
+  enum AccountType {
+    CASH
+    BANK
+    E_WALLET
+    INVESTMENT
+    OTHER
+  }
+
+  model Account {
+    id        String   @id @default(uuid())
+    userId    String
+    name      String
+    type      AccountType
+    balance   Float    @default(0)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    transactions Transaction[]
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    
+    @@index([userId])
+    @@map("accounts")
+  }
+
+
+  model Transaction {
+    id          String    @id @default(uuid())
+    accountId   String
+    categoryId  String
+    amount      Float
+    type        TransactionType
+    description String?
+    initialBalance Float   @default(0)
+    finalBalance   Float   @default(0)
+    merchantName  String?
+    merchantLocation String?
+    transactionTime String
+    transactionDate DateTime  @default(now())
+    createdAt   DateTime  @default(now())
+
+    account     Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+    category    Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+    @@index([accountId])
+    @@index([categoryId])
+
+    @@map("transactions")
+  }
