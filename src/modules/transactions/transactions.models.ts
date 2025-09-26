@@ -1,46 +1,52 @@
 import { z } from "zod";
-import { categorySchema } from "../categories/categories.validation";
-
-export const accountSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(1, "Name is required"),
-  type: z.enum(["BANK", "CASH", "E-WALLET", "INVESTMENT", "OTHER"]),
-});
+import { categorySchema } from "../categories/categories.models";
+import { accountsSchema } from "../accounts/accounts.models";
 
 export const transactionParamsSchema = z.object({
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
+  startDate: z.preprocess(
+    (val) => (typeof val === "string" ? new Date(val) : undefined),
+    z.date().optional()
+  ),
+  endDate: z.preprocess(
+    (val) => (typeof val === "string" ? new Date(val) : undefined),
+    z.date().optional()
+  ),
   search: z.string().optional(),
-  accountId: z.string().uuid().optional(),
-  limit: z.string().optional(),
-  page: z.string().optional(),
-  categoryId: z.string().uuid().optional(),
+  accountId: z.uuid().optional(),
+  categoryId: z.uuid().optional(),
   type: z.enum(["INCOME", "EXPENSE"]).optional(),
+  limit: z.preprocess(
+    (val) => (val ? parseInt(val as string, 10) : 10),
+    z.number()
+  ),
+  page: z.preprocess(
+    (val) => (val ? parseInt(val as string, 10) : 1),
+    z.number()
+  ),
 });
 
 export const transactionSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   amount: z.number(),
-  accountId: z.string().uuid(),
-  categoryId: z.string().uuid(),
+  accountId: z.uuid(),
+  categoryId: z.uuid(),
   type: z.enum(["INCOME", "EXPENSE"]),
   transactionTime: z.string(),
-  description: z.string(),
-  merchantName: z.string().nullable(),
-  merchantLocation: z.string().nullable(),
+  description: z.string().nullable().optional(),
+  merchantName: z.string().optional().nullable(),
+  merchantLocation: z.string().optional().nullable(),
   initialBalance: z.number(),
   finalBalance: z.number(),
-  category: categorySchema,
-  account: accountSchema,
-  userId: z.string().uuid(),
-  transactionDate: z.string().datetime(),
-  createdAt: z.string().datetime(),
+  category: categorySchema.optional(),
+  account: accountsSchema.optional(),
+  transactionDate: z.date(),
+  createdAt: z.date(),
 });
 
 export const createTransactionSchema = z.object({
   amount: z.number().min(0, "Amount must be greater than or equal to 0"),
-  accountId: z.string().uuid(),
-  categoryId: z.string().uuid(),
+  accountId: z.uuid(),
+  categoryId: z.uuid(),
   type: z.enum(["INCOME", "EXPENSE"]),
   transactionDate: z
     .string()
@@ -57,8 +63,6 @@ export const createTransactionSchema = z.object({
   merchantLocation: z.string().optional(),
 });
 
-export type accountResponse = z.infer<typeof accountSchema>;
 export type transactionParams = z.infer<typeof transactionParamsSchema>;
-export type createAccountRequest = z.infer<typeof accountSchema>;
 export type transactionResponse = z.infer<typeof transactionSchema>;
 export type createTransactionRequest = z.infer<typeof createTransactionSchema>;

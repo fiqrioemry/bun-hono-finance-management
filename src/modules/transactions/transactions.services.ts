@@ -3,10 +3,13 @@ import {
   transactionResponse,
   transactionParams,
   createTransactionRequest,
-} from "./transactions.validation";
+} from "./transactions.models";
 import { z } from "zod";
 import prisma from "@/config/database";
 import { HTTPException } from "hono/http-exception";
+
+// ? if logic goes more complex, consider to use clean architecture or DDD
+// ? for this project, keep this simple or you can separate the prisma function to repositories
 
 export class TransactionsServices {
   static async getAll(
@@ -24,12 +27,7 @@ export class TransactionsServices {
       page,
     } = params;
 
-    const parsedPage = page ? parseInt(page) : 1;
-    const parsedLimit = limit ? parseInt(limit) : 10;
-
-    let where: any = {
-      userId,
-    };
+    let where: any = {};
 
     if (startDate) {
       where.transactionDate = {
@@ -68,8 +66,8 @@ export class TransactionsServices {
         category: true,
         account: true,
       },
-      take: parsedLimit,
-      skip: (parsedPage - 1) * parsedLimit,
+      take: limit,
+      skip: (page - 1) * limit,
       orderBy: { transactionDate: "desc" },
     });
 
@@ -104,21 +102,16 @@ export class TransactionsServices {
         ? account.balance + request.amount
         : account.balance - request.amount;
 
+    const defaultTime = new Date().toTimeString().split(" ")[0];
+
     // start transaction to handle rollback if failed
     const [newTransaction, updateAccount] = await prisma.$transaction([
       // create new transaction record
       prisma.transaction.create({
         data: {
-          accountId: account.id,
-          categoryId: category.id,
-          transactionTime:
-            request.transactionTime || new Date().toTimeString().split(" ")[0],
+          ...request,
+          transactionTime: request.transactionTime || defaultTime,
           transactionDate: new Date(request.transactionDate),
-          merchantLocation: request.merchantLocation || null,
-          merchantName: request.merchantName || null,
-          description: request.description,
-          type: request.type,
-          amount: request.amount,
           initialBalance: account.balance,
           finalBalance,
         },
